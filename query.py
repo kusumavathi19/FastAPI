@@ -3,10 +3,14 @@ from fastapi import FastAPI
 
 app = FastAPI()
 
-items=[{"items1":"bar"},{"item2":"milk"},{"item3":"water"}]
-@app.get("/items/")
+item_list=[{"items1":"bar"},{"item2":"milk"},{"item3":"water"}]
+@app.get("/item_list/")
 async def read_item(skip: int=0, limit: int=10):
-    return items[skip:skip+limit]
+    return item_list[skip:skip+limit]
+    
+@app.get("/items/")
+async def items(num:int,text:str):
+        return{"number":num,"text":text}
     
     
     
@@ -15,6 +19,7 @@ async def read_item(skip: int=0, limit: int=10):
 ##app = FastAPI()
 
 #fake_items_db = [{"item_name": "Foo"}, {"item_name": "Bar"}, {"item_name": "Baz"}]
+
 
 
 #@app.get("/items/")
