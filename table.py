@@ -37,33 +37,36 @@ class User(BaseModel):
     password:str
     
     
-user =FastAPI()
+app =FastAPI()
 
-@user.post("/login/")
+@app.post("/login/")
 async def login(server: str = Form(),database: str = Form(),username: str = Form(),password: str = Form()):
+    DB_URL = "oracle+cx_oracle://system:oracle@localhost:1521/xe"
+    engine = create_engine(DB_URL)
+    connection=engine.connect()
     return {"username": username}
 
-@user.get("/")
+@app.get("/")
 async def read_data():
     stmt = users.select()
     return connection.execute(stmt).fetchall()
     pass 
     
-@user.get("/{id}")
+@app.get("/{id}")
 async def read_data(id:int):
         return connection.execute(users.select().where(users.c.id==id)).fetchall()
        
-@user.post("/")
+@app.post("/")
 async def write_data(user:User):
-        return connection.execute(users.insert().values(
+        return [connection.execute(users.insert().values(
         id=user.id,
         name=user.name,
         email=user.email,
-        password=user.password))
-        return connection.execute(users.select()).fetchall()
-        return{"id":user.id,"name":user.name,"email":user.email,"password":user.password}
+        password=user.password)),
+        connection.execute(users.select()).fetchall()]
         
-@user.put("/{id}")
+        
+@app.put("/{id}")
 async def update_data(id:int,user:User):
     connection.execute(users.update().values(
          name=user.name,
@@ -71,7 +74,7 @@ async def update_data(id:int,user:User):
          password=user.password).where(users.c.id==id))
     return connection.execute(users.select()).fetchall()        
 
-@user.delete("/{id}")
+@app.delete("/{id}")
 async def delete_data(id:int):
     connection.execute(users.delete().where(users.c.id == id))
     return connection.execute(users.select()).fetchall()        
