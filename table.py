@@ -4,6 +4,7 @@ from sqlalchemy.orm import sessionmaker
 from pydantic import BaseModel
 from fastapi import FastAPI
 from fastapi import APIRouter
+from fastapi import FastAPI, Form
 engine=None
 #connection
 DB_URL = "oracle+cx_oracle://system:oracle@localhost:1521/xe"
@@ -12,6 +13,11 @@ connection=engine.connect()
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
+
+
+
+
+
 
 metadata = MetaData()
 users= Table(
@@ -23,15 +29,19 @@ users= Table(
     Column('password', String(255)))
 metadata.create_all(engine)
 
-
+#schema
 class User(BaseModel):
-    id:int  
+    id:int 
     name:str    
     email:str
     password:str
     
     
 user =FastAPI()
+
+@user.post("/login/")
+async def login(server: str = Form(),database: str = Form(),username: str = Form(),password: str = Form()):
+    return {"username": username}
 
 @user.get("/")
 async def read_data():
@@ -46,10 +56,12 @@ async def read_data(id:int):
 @user.post("/")
 async def write_data(user:User):
         return connection.execute(users.insert().values(
+        id=user.id,
         name=user.name,
         email=user.email,
         password=user.password))
         return connection.execute(users.select()).fetchall()
+        return{"id":user.id,"name":user.name,"email":user.email,"password":user.password}
         
 @user.put("/{id}")
 async def update_data(id:int,user:User):
@@ -59,8 +71,8 @@ async def update_data(id:int,user:User):
          password=user.password).where(users.c.id==id))
     return connection.execute(users.select()).fetchall()        
 
-@user.delete("/")
-async def delete_data():
+@user.delete("/{id}")
+async def delete_data(id:int):
     connection.execute(users.delete().where(users.c.id == id))
     return connection.execute(users.select()).fetchall()        
     
