@@ -7,7 +7,7 @@ from fastapi import APIRouter
 from fastapi import FastAPI, Form
 engine=None
 #connection
-DB_URL = "oracle+cx_oracle://system:oracle@localhost:1521/xe"
+DB_URL = "oracle+cx_oracle://kusuma:kusuma@localhost:1521/xe"
 engine = create_engine(DB_URL)
 connection=engine.connect()
 
