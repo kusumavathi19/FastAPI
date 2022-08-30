@@ -8,3 +8,5 @@ spark = SparkSession\
 
 df=spark.read.option('header','true').csv('export.csv')
 df.show()
+#df.write.option('compression','snappy').parquet('export2.parquet')
+df.printSchema()
