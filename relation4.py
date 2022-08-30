@@ -29,8 +29,8 @@ class Child(Base):
     id = Column(Integer, primary_key=True)
     parent_id = Column(Integer, ForeignKey("table1.id"))
 
-    # many-to-one side remains, see tip below
-    parent = relationship("Parent", back_populates="table2")
+    # many-to-one side remains,
+    table1 = relationship("Parent", back_populates="table2")
 Base.metadata.create_all(engine) 
 session  = SessionLocal()
 session.commit()        
