@@ -35,3 +35,6 @@ KT session on SPARK framework
 spark-https://spark.apache.org/docs/latest/sql-getting-started.html
 creation of  spark session.
 creation of DataFrames.
+
+01=08-2022
+convertion of dataframe into parquet file.

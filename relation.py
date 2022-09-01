@@ -1,3 +1,7 @@
+#This pprogram describes creation of another table which is related to already existing one in our database. 
+# The customers table contains master data of customers. 
+# We now need to create invoices table which may have any number of invoices belonging to a customer. 
+#This is a case of one to many relationships.
 import urllib
 from sqlalchemy import create_engine,Column,ForeignKey ,Integer,Table, String
 from sqlalchemy.ext.declarative import declarative_base
@@ -17,15 +21,6 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base=declarative_base()
 
 
-#class Parent(Base):
-#   __tablename__="parent"
-#    id=Column(Integer,primary_key=True)
-#    childern=relationship("Child")
-   
-#    __tablename__ = "child"
-#    id = Column(Integer,primary_key=True)
-#    parent_id = Column(Integer,ForeignKey("parent.id"))
-#Base.metadata.create_all(engine)
 class Customer(Base):
    __tablename__ = 'customers'
 
