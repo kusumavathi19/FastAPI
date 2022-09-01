@@ -1,0 +1,37 @@
+22-08-2022:
+Introductory meetings
+KT session on FastAPI's
+Executing sample FastAPI's (get method) 
+Installation of uvicorn and examplar program to execute arithmatic operations
+
+23-08-2022
+creating virtual environment.
+Testing of API programs using swagger
+Path parameters with example code snippets
+Query parameters
+KT sessin on GitHub
+
+24-08-2022
+getting familiar with Git(Creating a repository in Git hub, Pushing files to the repository created, Understanding the various Git commands)
+Postgres SQL/ Async SQL relational database in fastAPI documentation
+KT session on SQLAlchemy(ORL-object relation mapping)
+
+
+25-08-2022
+Learnig SQLAlchemy
+creation of a table in a database
+inserting values into table
+
+
+26-08-2022
+binding FastAPI with the database using sql alchemy
+crud operations on  database using FastAPI
+ 
+29-08-2022
+Basic relationship patters in sql alchemy
+KT session on SPARK framework
+
+30-08-2022
+spark-https://spark.apache.org/docs/latest/sql-getting-started.html
+creation of  spark session.
+creation of DataFrames.
