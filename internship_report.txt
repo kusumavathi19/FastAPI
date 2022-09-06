@@ -36,5 +36,17 @@ spark-https://spark.apache.org/docs/latest/sql-getting-started.html
 creation of  spark session.
 creation of DataFrames.
 
-01=08-2022
+01-08-2022
 convertion of dataframe into parquet file.
+
+02-09-2022
+retrieving data from database and convertion of same data into parquet file
+working of microservices
+
+05-09-2022
+Extarction of data from multiple table in the datebase
+Retrival of table schema using ORM (sqlacodegen)(sqlcodegen "url">filename)
+
+06-09-2022:
+Convertion of extracted data in the multiple tables of the database to parquet file.
+Creation of seperate parquet file in distinct locations for each table present in the database. 
