@@ -50,3 +50,8 @@ Retrival of table schema using ORM (sqlacodegen)(sqlcodegen "url">filename)
 06-09-2022:
 Convertion of extracted data in the multiple tables of the database to parquet file.
 Creation of seperate parquet file in distinct locations for each table present in the database. 
+
+7-09-2022
+creation of fastapi for retrieving schemas.
+creation of fastapi for retrieving table names from database.
+creation of fastapi for retrieving  metadatas
