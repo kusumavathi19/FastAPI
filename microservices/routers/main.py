@@ -12,14 +12,14 @@ from fastapi import FastAPI,Form,status,responses
 import spark_connection
 import connections,models
 from parquet import create_parquet
+from config import config
+from parquet import connection_required
+
 
 
 # DB_URL = "oracle://kusuma:kusuma@localhost:1521/xe"
 # engine = create_engine(DB_URL)
-# connection=engine.connect()
-SessionLocal = sessionmaker(bind=connections.engine)
-db=SessionLocal()
-
+# connection=engine.connect(
 
 app = FastAPI()
 app.include_router(connections.router)
@@ -40,8 +40,9 @@ app.include_router(connections.router)
 #retrieving schemas
 @app.get("/schemas")
 async def schema():
-    details = connections.connection_details
-    engine = create_engine(f"{details.database_name}+cx_oracle://{details.username}:{details.password}@{details.ip_address}:{details.port_number}/{details.schema_name}")
+    connection_details = config.connection_details
+    engine = create_engine(
+        f"{connection_details.database_name}+cx_oracle://{connection_details.username}:{connection_details.password}@{connection_details.ip_address}:{connection_details.port_number}/")
     inspector=inspect(engine)
     result=inspector.get_schema_names()
     return result
@@ -49,7 +50,10 @@ async def schema():
 #retrieving table names
 @app.get("/tables")
 async def get_tables(schema_name:str):
-    inspector =inspect(connections.engine)
+    connection_details = config.connection_details
+    engine = create_engine(
+        f"{connection_details.database_name}+cx_oracle://{connection_details.username}:{connection_details.password}@{connection_details.ip_address}:{connection_details.port_number}/")
+    inspector =inspect(engine)
     result=inspector.get_table_names(schema_name)
     if not result:
         responses.status_code = status.HTTP_404_NOT_FOUND
@@ -59,21 +63,24 @@ async def get_tables(schema_name:str):
 #retriving metadata
 @app.get("/metadata")
 async def get_metadata(table_name:str):
-    inspector =inspect(connections.engine)
+    connection_details = config.connection_details
+    engine = create_engine(
+        f"{connection_details.database_name}+cx_oracle://{connection_details.username}:{connection_details.password}@{connection_details.ip_address}:{connection_details.port_number}/")
+    inspector =inspect(engine)
     result=inspector.get_columns(table_name)
     if not result:
         responses.status_code = status.HTTP_404_NOT_FOUND
         return{'details':f"table with table name {table_name} is not available"}
     return result
 
-async def get_dict(obj: extract.Base):
-    fields = dict(vars(obj))
-    del fields["_sa_instance_state"]
-    return fields
+# async def get_dict(obj: extract.Base):
+#     fields = dict(vars(obj))
+#     del fields["_sa_instance_state"]
+#     return fields
 
 
-tables = [cls_obj for cls_name, cls_obj in inspect_module.getmembers(sys.modules["extract"]) if inspect_module.isclass(
-    cls_obj) and isinstance(cls_obj, decl_api.DeclarativeMeta) and cls_obj.__name__ != "Base"]
+# tables = [cls_obj for cls_name, cls_obj in inspect_module.getmembers(sys.modules["extract"]) if inspect_module.isclass(
+#     cls_obj) and isinstance(cls_obj, decl_api.DeclarativeMeta) and cls_obj.__name__ != "Base"]
 
 
 
@@ -91,20 +98,30 @@ tables = [cls_obj for cls_name, cls_obj in inspect_module.getmembers(sys.modules
 
 
 @app.post("/")
+@connection_required
 async def archive_all():
+    connection_details = config.connection_details
+    engine = create_engine(
+        f"{connection_details.database_name}+cx_oracle://{connection_details.username}:{connection_details.password}@{connection_details.ip_address}:{connection_details.port_number}/")
+    inspector = inspect(engine)
+    schema_names = inspector.get_schema_names()
+    create_parquet(engine, schema_names)
     pass
 
+
 @app.post("/schema")
-#@connection_required
-async def archive_schema(schema:str, archive_details:models.ArchiveInfo):
-    global engine
-    create_parquet(connections.engine, [schema])
-    return {"msg" : "Creation of parquet files for all tables completed successfully"}
+@connection_required
+async def archive_schema(schema: str, archive_details: models.ArchiveInfo):
+    connection_details = config.connection_details
+    engine = create_engine(
+        f"{connection_details.database_name}+cx_oracle://{connection_details.username}:{connection_details.password}@{connection_details.ip_address}:{connection_details.port_number}/")
+    create_parquet(engine, [schema])
+    return {"msg": "Creation of parquet files for all tables completed successfully"}
+
 
 @app.post("/table")
-#@connection_required
-async def archive_table(schema:str, table:List[str]):
-    global engine 
-    print("schema= ", schema, "table = ",table)
-    create_parquet(connections.engine, [schema], table)
-    return {"msg" : "Creation of parquet files for all tables completed successfully"}
+@connection_required
+async def archive_table(schema: List[str], table: List[str], archive_details: models.ArchiveInfo):
+    engine = config.engine
+    create_parquet(engine, schema, table, archive_details)
+    return {"msg": "Creation of parquet files for all tables completed successfully"}

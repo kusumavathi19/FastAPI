@@ -1,15 +1,18 @@
-from functools import wraps
-from typing import Callable, Any
 from fastapi import APIRouter, HTTPException
+from copy import deepcopy
+from config import config
+import asyncio
+from functools import wraps
+from typing import Any, Callable
 from sqlalchemy import create_engine
 from models import DBInfo
-from sqlalchemy.orm import sessionmaker
 
-engine = None
-connection_details = None
+# connection_details = DBInfo(database_name="mysql", username="root", schema_name="classicmodels", password="estuate", port_number=3300, ip_address="localhost")
+# conn_str = f"{connection_details.database_name}+pymysql://{connection_details.username}:{connection_details.password}@{connection_details.ip_address}:{connection_details.port_number}/"
 
 
 router = APIRouter(prefix="/connect")
+
 
 @router.post("/")
 async def connect(details: DBInfo):
@@ -20,24 +23,33 @@ async def connect(details: DBInfo):
         dialect = "cx_oracle"
     elif details.database_name == "mssql":
         dialect == "pymssql"
-    conn_string = f"{details.database_name}+{dialect}://{details.username}:{details.password}@{details.ip_address}:{details.port_number}/{details.schema_name}"
-    global engine
-    global connection_details
-    engine = create_engine(conn_string)
-    connection_details = details
-    if not engine.connect():
-        return {"msg": "Wrong or missing Credentials"}
+    config.conn_str = f"{details.database_name}://{details.username}:{details.password}@{details.ip_address}:{details.port_number}/"
+    config.engine = create_engine(config.conn_str)
+    config.connection_details = deepcopy(details)
+    if not config.engine.connect():
+        raise HTTPException(
+            status_code=404, detail="Wrong or missing Credentials")
     else:
         return {"msg": "Connection successfull"}
 
 
 # A decorator to check if a connection exists before calling the passed function
-def connection_required(func : Callable) -> Callable:
-    @wraps(func)
-    async def wrapper(*args:Any, **kwargs:Any):
-        global engine
-        if not engine:
-            raise HTTPException(status_code=403, detail="No live connection exists on the server, try to connect before doing this operation")
-        else:
-            return func(*args, **kwargs)
-    return wrapper
+def connection_required(func: Callable) -> Callable:
+    if asyncio.iscoroutinefunction(func):
+        @wraps(func)
+        async def wrapper(*args: Any, **kwargs: Any):
+            if not config.engine:
+                raise HTTPException(
+                    status_code=403, detail="No live connection exists on the server, try to connect before doing this operation")
+            else:
+                return await func(*args, **kwargs)
+        return wrapper
+    else:
+        @wraps(func)
+        def wrapper(*args: Any, **kwargs: Any):
+            if not config.engine:
+                raise HTTPException(
+                    status_code=403, detail="No live connection exists on the server, try to connect before doing this operation")
+            else:
+                return func(*args, **kwargs)
+        return wrapper

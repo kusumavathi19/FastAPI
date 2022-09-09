@@ -12,4 +12,4 @@ class DBInfo(BaseModel):
 
 class ArchiveInfo(BaseModel):
     path:str = "dest"
-    compression_type:Union[str, None] = None    
+    compression_type:Union[str, None] = "snappy"    
