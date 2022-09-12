@@ -4,7 +4,7 @@ from config import config
 import asyncio
 from functools import wraps
 from typing import Any, Callable
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, exc
 from models import DBInfo
 
 # connection_details = DBInfo(database_name="mysql", username="root", schema_name="classicmodels", password="estuate", port_number=3300, ip_address="localhost")
@@ -23,15 +23,24 @@ async def connect(details: DBInfo):
         dialect = "cx_oracle"
     elif details.database_name == "mssql":
         dialect == "pymssql"
-    config.conn_str = f"{details.database_name}://{details.username}:{details.password}@{details.ip_address}:{details.port_number}/"
+    config.conn_str = f"{details.database_name}+{dialect}://{details.username}:{details.password}@{details.ip_address}:{details.port_number}/"
     config.engine = create_engine(config.conn_str)
     config.connection_details = deepcopy(details)
-    if not config.engine.connect():
+    try:
+        config.engine = create_engine(config.conn_str)
+        config.connection_details = deepcopy(details)
+        config.engine.connect()
+        return {"message" : "Connection Successfull"}
+    except exc.NoSuchModuleError:
+        raise HTTPException(status_code=404, detail="Unknown Database Server")
+    except exc.OperationalError:
         raise HTTPException(
             status_code=404, detail="Wrong or missing Credentials")
-    else:
-        return {"msg": "Connection successfull"}
-
+    except exc.InterfaceError:
+        raise HTTPException(
+            status_code=404, detail="Dialect not specified or Data source name cannot be found")
+    except Exception as e:
+        raise HTTPException(status_code=404, detail=f"{e}")
 
 # A decorator to check if a connection exists before calling the passed function
 def connection_required(func: Callable) -> Callable:
