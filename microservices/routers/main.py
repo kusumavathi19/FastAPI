@@ -1,3 +1,4 @@
+from logging import raiseExceptions
 from typing import List
 from importlib.metadata import metadata
 from pyexpat import model
@@ -8,7 +9,7 @@ from sqlalchemy import Column, Integer, String, create_engine
 from sqlalchemy import inspect
 from sqlalchemy.orm import declarative_base, sessionmaker,decl_api
 import sys,inspect as inspect_module
-from fastapi import FastAPI,Form,status,responses
+from fastapi import FastAPI,Form,status,responses,HTTPException
 import spark_connection
 import connections,models
 from parquet import create_parquet
@@ -19,6 +20,7 @@ app.include_router(connections.router)
 
 #retrieving schemas
 @app.get("/schemas")
+@connection_required
 async def schema():
     connection_details = config.connection_details
     engine = create_engine(
@@ -29,6 +31,7 @@ async def schema():
 
 #retrieving table names
 @app.get("/tables")
+@connection_required
 async def get_tables(schema_name:str):
     connection_details = config.connection_details
     engine = create_engine(
@@ -36,21 +39,24 @@ async def get_tables(schema_name:str):
     inspector =inspect(engine)
     result=inspector.get_table_names(schema_name)
     if not result:
-        responses.status_code = status.HTTP_404_NOT_FOUND
-        return{'details':f"No such schema present in the database"}
+        raise HTTPException(status_code=404,detail="table does not exist in the database")
     return result
 
 #retriving metadata
 @app.get("/metadata")
+@connection_required
 async def get_metadata(table_name:str):
     connection_details = config.connection_details
     engine = create_engine(
         f"{connection_details.database_name}+cx_oracle://{connection_details.username}:{connection_details.password}@{connection_details.ip_address}:{connection_details.port_number}/")
     inspector =inspect(engine)
     result=inspector.get_columns(table_name)
+    # if not result:
+    #     responses.status_code = status.HTTP_404_NOT_FOUND
+    #     return{'details':f"table with table name {table_name} is not present in the database"}
+    # return result
     if not result:
-        responses.status_code = status.HTTP_404_NOT_FOUND
-        return{'details':f"table with table name {table_name} is not present in the database"}
+        raise HTTPException(status_code=404,detail="table does not exist in the database")
     return result
 
 # @app.post("/")
