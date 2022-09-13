@@ -6,7 +6,7 @@ from urllib import response
 import pandas as pd
 from pyspark.sql import SparkSession,SQLContext
 from sqlalchemy import Column, Integer, String, create_engine
-from sqlalchemy import inspect
+from sqlalchemy import inspect,exc
 from sqlalchemy.orm import declarative_base, sessionmaker,decl_api
 import sys,inspect as inspect_module
 from fastapi import FastAPI,Form,status,responses,HTTPException
@@ -39,7 +39,7 @@ async def get_tables(schema_name:str):
     inspector =inspect(engine)
     result=inspector.get_table_names(schema_name)
     if not result:
-        raise HTTPException(status_code=404,detail="table does not exist in the database")
+        raise HTTPException(status_code=404,detail="Enter the valid schema")
     return result
 
 #retriving metadata
@@ -51,13 +51,13 @@ async def get_metadata(table_name:str):
         f"{connection_details.database_name}+cx_oracle://{connection_details.username}:{connection_details.password}@{connection_details.ip_address}:{connection_details.port_number}/")
     inspector =inspect(engine)
     result=inspector.get_columns(table_name)
-    # if not result:
-    #     responses.status_code = status.HTTP_404_NOT_FOUND
-    #     return{'details':f"table with table name {table_name} is not present in the database"}
-    # return result
+    fields = {"TABLE":table_name}
+    for row in result:
+            fields[f"{row['name']}"] = f"{row['type']}"
     if not result:
         raise HTTPException(status_code=404,detail="table does not exist in the database")
-    return result
+    return fields
+
 
 # @app.post("/")
 # @connection_required
@@ -77,7 +77,7 @@ async def archive_schema(schema: str, archive_details: models.ArchiveInfo):
     connection_details = config.connection_details
     engine = create_engine(
         f"{connection_details.database_name}+cx_oracle://{connection_details.username}:{connection_details.password}@{connection_details.ip_address}:{connection_details.port_number}/")
-    create_parquet(engine, [schema])
+    create_parquet(engine, [schema], details=archive_details)
     return {"msg": "Creation of parquet files for all tables completed successfully"}
 
 

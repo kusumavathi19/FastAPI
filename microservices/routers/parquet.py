@@ -60,7 +60,7 @@ def create_parquet(engine, schemas: List[str], table_names: List[str] = [], deta
                 result = db.query(table).all()
                 result = list(map(get_dict, result))
                 try:
-                    df =spark_connection.spark.createDataFrame(result)
+                    df = spark_connection.spark.createDataFrame(result)
                     print(colorama.Fore.GREEN+"INFO:",
                           f"\t  Writing {table.__name__} to {details.path} using {details.compression_type}")
                     df.repartition(1).write.mode("overwrite").format("parquet").option(
