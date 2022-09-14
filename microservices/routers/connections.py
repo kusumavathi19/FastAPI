@@ -23,9 +23,7 @@ async def connect(details: DBInfo):
         dialect = "cx_oracle"
     elif details.database_name == "mssql":
         dialect == "pymssql"
-    config.conn_str = f"{details.database_name}+{dialect}://{details.username}:{details.password}@{details.ip_address}:{details.port_number}/"
-    config.engine = create_engine(config.conn_str)
-    config.connection_details = deepcopy(details)
+    config.conn_str = f"{details.database_name}+{dialect}://{details.username}:{details.password}@{details.ip_address}:{details.port_number}/xe"
     try:
         config.engine = create_engine(config.conn_str)
         config.connection_details = deepcopy(details)

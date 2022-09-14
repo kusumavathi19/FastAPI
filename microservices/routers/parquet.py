@@ -26,9 +26,10 @@ def get_dict(obj: decl_api.DeclarativeMeta):
 
 def create_parquet(engine, schemas: List[str], table_names: List[str] = [], details: ArchiveInfo = ArchiveInfo()):
     for schema in schemas:
-        url = config.conn_str+schema
+        url = config.conn_str
         print(colorama.Fore.GREEN+"INFO:", "\t  Connection URL : ", url)
         engine = create_engine(url)
+        engine.execute(f"alter session set current_schema={schema}")
         SessionLocal = sessionmaker(bind=engine)
         sqla_path = "C:\\Users\\Kusuma\\FastAPI\\Scripts\\sqlacodegen.exe"
         print(colorama.Fore.GREEN+"INFO:",

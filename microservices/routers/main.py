@@ -19,24 +19,19 @@ app = FastAPI()
 app.include_router(connections.router)
 
 #retrieving schemas
-@app.get("/schemas")
+@app.get("/List_schemas")
 @connection_required
 async def schema():
-    connection_details = config.connection_details
-    engine = create_engine(
-        f"{connection_details.database_name}+cx_oracle://{connection_details.username}:{connection_details.password}@{connection_details.ip_address}:{connection_details.port_number}/")
-    inspector=inspect(engine)
-    result=inspector.get_schema_names()
+    inspector=inspect(config.engine)
+    result=config.engine.execute("select distinct table_schema from all_tab_privs")
     return result
 
 #retrieving table names
 @app.get("/tables")
 @connection_required
 async def get_tables(schema_name:str):
-    connection_details = config.connection_details
-    engine = create_engine(
-        f"{connection_details.database_name}+cx_oracle://{connection_details.username}:{connection_details.password}@{connection_details.ip_address}:{connection_details.port_number}/")
-    inspector =inspect(engine)
+    config.engine.execute(f"alter session set current_schema={schema_name}")
+    inspector =inspect(config.engine)
     result=inspector.get_table_names(schema_name)
     if not result:
         raise HTTPException(status_code=404,detail="Enter the valid schema")
@@ -47,9 +42,7 @@ async def get_tables(schema_name:str):
 @connection_required
 async def get_metadata(table_name:str):
     connection_details = config.connection_details
-    engine = create_engine(
-        f"{connection_details.database_name}+cx_oracle://{connection_details.username}:{connection_details.password}@{connection_details.ip_address}:{connection_details.port_number}/")
-    inspector =inspect(engine)
+    inspector =inspect(config.engine)
     result=inspector.get_columns(table_name)
     fields = {"TABLE":table_name}
     for row in result:
@@ -74,10 +67,7 @@ async def get_metadata(table_name:str):
 @app.post("/schema")
 @connection_required
 async def archive_schema(schema: str, archive_details: models.ArchiveInfo):
-    connection_details = config.connection_details
-    engine = create_engine(
-        f"{connection_details.database_name}+cx_oracle://{connection_details.username}:{connection_details.password}@{connection_details.ip_address}:{connection_details.port_number}/")
-    create_parquet(engine, [schema], details=archive_details)
+    create_parquet(config.engine, [schema], details=archive_details)
     return {"msg": "Creation of parquet files for all tables completed successfully"}
 
 

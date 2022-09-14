@@ -7,7 +7,7 @@ class DBInfo(BaseModel):
     password:str 
     ip_address:str 
     port_number:int
-    schema_name:str
+    #schema_name:str
     
 
 class ArchiveInfo(BaseModel):
