@@ -23,7 +23,7 @@ app.include_router(connections.router)
 @connection_required
 async def schema():
     inspector=inspect(config.engine)
-    result=config.engine.execute("select distinct table_schema from all_tab_privs")
+    result=inspector.get_schema_names()
     return result
 
 #retrieving table names
